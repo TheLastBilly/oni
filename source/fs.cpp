@@ -38,9 +38,6 @@ void fs::path_t::update()
     
     is_dir = S_ISDIR(file_stat.st_mode);
 
-    if(is_dir)
-        path += path_div_character;
-
     size = file_stat.st_size;
 }
 
@@ -105,34 +102,5 @@ fs::paths_t fs::get_subpaths(std::string path)
     }
 
     closedir(path_dir);
-    return paths;
-}
-
-fs::paths_t fs::get_subpaths_recursively(std::string path)
-{   
-    fs::path_t p = path;
-    p.update();
-    if(!p.is_directory())
-        throw std::runtime_error("\"" + path + "\" is not a directory");
-
-    if(p.get_relative_name() == ".." || p.get_relative_name() == ".")
-        return {};
-
-    fs::paths_t paths = get_subpaths(path);
-    fs::paths_t new_paths = {};
-
-    for(path_t cp : paths)
-    {
-        if(!cp.is_directory() || cp.get_relative_name() == "..")
-            continue;
-        fs::paths_t np = get_subpaths_recursively(cp.get_path());
-
-        for(path_t &c : np)
-            new_paths.push_back(c);
-    }
-
-    for(path_t &c : new_paths)
-            paths.push_back(c);
-
     return paths;
 }

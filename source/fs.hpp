@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 
+#include "json11.hpp"
+
 namespace oni
 {
     class fs
@@ -29,6 +31,8 @@ namespace oni
             {change_path(path); update();}
 
             bool is_updated() {return updated;}
+
+            json11::Json to_json() const {return json11::Json::object{{"size", static_cast<double>(size)}, {"path", path}};}
         private:
             std::string path;
             std::string name;
