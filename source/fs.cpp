@@ -69,7 +69,7 @@ std::string fs::get_relative_name(std::string path)
 
 std::string fs::add_missing_directory_divider(std::string path)
 {
-    if(path[path.size()-1] != path_div_character)
+    if(path.size() > 0 && path[path.size()-1] != path_div_character)
         path += path_div_character;
     return path;
 }
