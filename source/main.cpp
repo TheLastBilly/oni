@@ -1,11 +1,12 @@
 #include <iostream>
 
-#include "fs.hpp"
-#include "packages.hpp"
+#include "target.hpp"
 
 int main(int argc, char *argv[])
 {
-    oni::package::directory_t dir =  oni::package::scan_directory("/home/lastc/Documents/oni/dependencies");
-    std::cout << json11::Json(dir).dump() << "\n";
+    oni::target_t target("/Archive/Steam/steamapps/common/Morrowind");
+    target.set_data_path("/Archive/Steam/steamapps/common/Morrowind/Data Files");
+    target.update();
+    std::cout << target.build_json() << "\n";
     return 0;
 }

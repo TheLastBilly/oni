@@ -30,6 +30,9 @@ void fs::path_t::update()
 {
     updated = false;
 
+    if(path.size() < 1)
+        return;
+    
     struct stat file_stat = {};
     int err = stat(path.c_str(), &file_stat);
 
@@ -38,7 +41,21 @@ void fs::path_t::update()
     
     is_dir = S_ISDIR(file_stat.st_mode);
 
-    size = file_stat.st_size;
+    size = file_stat.st_size * !is_dir;
+
+    if(path.size() > 0 && is_dir && path[path.size() -1] != path_div_character)
+        path += "/";
+}
+
+void fs::directory_t::update()
+{
+    if(path.size() < 1)
+        return;
+    
+    this->path_t::update();
+    fs::directory_t dir = scan_directory(path);
+    files = dir.files;
+    directories = dir.directories;
 }
 
 std::string fs::get_extension(std::string path)
@@ -55,7 +72,7 @@ std::string fs::get_extension(std::string path)
 
 std::string fs::get_relative_name(std::string path)
 {
-    if(path.size() > 0 && path[path.size()-1] == path_div_character)
+    while(path.size() > 0 && path[path.size()-1] == path_div_character)
         path.pop_back();
 
     size_t div_index;
@@ -71,25 +88,22 @@ std::string fs::add_missing_directory_divider(std::string path)
     return path;
 }
 
-fs::paths_t fs::get_subpaths(std::string path)
+fs::paths_t fs::get_subpaths(path_t path)
 {
-    fs::path_t p = path;
-    p.update();
-    if(!p.is_directory())
-        throw std::runtime_error("\"" + path + "\" is not a directory");
+    path.update();
+    if(!path.is_directory())
+        throw std::runtime_error("\"" + path.get_path() + "\" is not a directory");
 
-    DIR *path_dir = opendir(path.c_str());
+    DIR *path_dir = opendir(path.get_path().c_str());
     if(path_dir == NULL)
-        throw std::runtime_error("cannot read \"" + path + "\"");
+        throw std::runtime_error("cannot read \"" + path.get_path() + "\"");
 
     struct dirent *entry;
     paths_t paths;
-    
-    path = add_missing_directory_divider(path);
 
     while(entry = readdir(path_dir))
     {
-        path_t p = path + std::string(entry->d_name);
+        path_t p = path.get_path() + std::string(entry->d_name);
         try
         {
             p.update();
@@ -103,4 +117,27 @@ fs::paths_t fs::get_subpaths(std::string path)
 
     closedir(path_dir);
     return paths;
+}
+
+fs::directory_t fs::scan_directory(path_t path)
+{
+    directory_t dir(path);
+
+    if(dir.get_relative_name() == ".." || dir.get_relative_name() == ".")
+        return dir;
+
+    fs::paths_t paths = fs::get_subpaths(path);
+
+    for(fs::path_t cp : paths)
+    {
+        if(!cp.is_directory())
+        {
+            dir.append_file(cp);
+            continue;
+        }
+
+        dir.append_directory(scan_directory(cp.get_path()));
+    }
+
+    return dir;
 }
