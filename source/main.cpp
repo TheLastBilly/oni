@@ -4,8 +4,9 @@
 
 int main(int argc, char *argv[])
 {
-    oni::fs::path_t p = "/tmp/test.txt";
-    p.update();
-    std::cout << p.get_extension() << " is a directory " << std::to_string(p.is_directory()) << "\n";
+    for(oni::fs::path_t &p : oni::fs::get_subpaths_recursively("/home/lastc/Documents/coenpra"))
+    {
+        std::cout << p.get_path() << "\n";
+    }
     return 0;
 }
